@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SmartClean | Monitoreo del contenedor</title>
+<style>
+:root{--bg:#0b0e12;--panel:#151a21;--panel2:#1d242d;--line:#2a3440;--text:#f2f5f7;--muted:#9aa7b5;--accent:#ff4d5e;--mint:#42e6b1;--yellow:#ffc857;--blue:#7fb3ff}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:Inter,system-ui,"Segoe UI",Arial,sans-serif;color:var(--text);background:radial-gradient(circle at 10% 0%,#2a1118 0,transparent 35%),radial-gradient(circle at 90% 10%,#0e2a2a 0,transparent 40%),var(--bg);min-height:100vh}
+.top{position:sticky;top:0;z-index:20;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 22px;background:rgba(11,14,18,.84);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-weight:900;font-size:1.2rem;background:linear-gradient(145deg,var(--accent),#7f2532);color:#fff;box-shadow:0 0 24px #ff4d5e44}
+.brand strong{display:block;font-size:1.05rem;letter-spacing:.4px}
+.brand small{display:block;color:var(--muted);font-size:.72rem}
+.pill{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:#0e151c;border-radius:999px;padding:8px 12px;font-size:.8rem;color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--yellow);box-shadow:0 0 10px currentColor}
+.dot.ok{background:var(--mint)}
+.dot.bad{background:var(--accent)}
+main{max-width:1180px;margin:auto;padding:0 18px 44px}
+.hero{padding:46px 0 22px;text-align:center}
+.hero h1{font-size:clamp(2.2rem,6vw,3.6rem);margin:8px 0 10px;letter-spacing:-1.5px}
+.hero p{max-width:760px;margin:0 auto;color:var(--muted);line-height:1.65;font-size:.95rem}
+.hero-tags{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+.hero-tags span{border:1px solid var(--line);background:#10171e;color:var(--muted);border-radius:999px;padding:6px 11px;font-size:.74rem}
+.nav{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:8px 0 26px}
+.nav a{color:var(--muted);text-decoration:none;border:1px solid transparent;padding:8px 12px;border-radius:999px;font-size:.8rem}
+.nav a:hover{color:var(--text);background:#141b23;border-color:var(--line)}
+.section{margin:26px 0 38px;scroll-margin-top:84px}
+.section-head{display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.section-head h2{margin:4px 0 0;font-size:1.45rem}
+.eyebrow{color:var(--accent);font-size:.7rem;letter-spacing:2.4px;font-weight:800}
+.panel{background:linear-gradient(150deg,#171d25,#11161c);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 16px 40px #0004;min-width:0}
+.panel h3{margin:0 0 12px;font-size:1rem}
+.connection{margin-bottom:14px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+label{display:block;color:var(--muted);font-size:.76rem;margin:12px 0 6px}
+input{width:100%;background:#0a1118;border:1px solid var(--line);color:var(--text);border-radius:10px;padding:11px 12px;font:inherit;outline:none}
+input:focus{border-color:var(--accent)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+button{font:inherit;border:0;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer;background:var(--accent);color:#fff}
+button.secondary{background:#1b2733;color:var(--text);border:1px solid var(--line)}
+button.danger{background:#4a1d24;color:#ffb3bb;border:1px solid #7c2d3a}
+button:hover{filter:brightness(1.08)}
+button:disabled{opacity:.5;cursor:not-allowed}
+.tag{display:inline-block;border:1px solid #2c4650;background:#10252b;color:var(--mint);border-radius:999px;padding:5px 10px;font-size:.7rem;font-weight:800;white-space:nowrap}
+.tag.warn{background:#3a2f12;border-color:#5d4a1c;color:var(--yellow)}
+.tag.bad{background:#3d171e;border-color:#6e2734;color:#ff9aa3}
+.monitor-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:14px;margin-bottom:14px}
+.radar-panel{display:flex;flex-direction:column}
+.radar-wrap{position:relative;width:100%;max-width:430px;margin:6px auto 0;aspect-ratio:1/1}
+#radar{width:100%;height:100%;display:block}
+.radar-legend{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:8px;color:var(--muted);font-size:.74rem}
+.radar-legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+.dot-green{background:var(--mint)}
+.dot-yellow{background:var(--yellow)}
+.dot-red{background:var(--accent)}
+.level-row{display:flex;gap:16px;align-items:center;margin-bottom:14px}
+.percent{font-size:clamp(2.6rem,7vw,4rem);font-weight:900;letter-spacing:-3px;line-height:1;min-width:120px}
+.percent small{font-size:1rem;color:var(--muted);letter-spacing:0;margin-left:2px}
+.level-info{flex:1;min-width:0}
+.bar{height:12px;background:#0a1118;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.barin{height:100%;width:0;background:linear-gradient(90deg,var(--mint),var(--yellow),var(--accent));transition:width .5s}
+.scale{display:flex;justify-content:space-between;color:var(--muted);font-size:.7rem;margin-top:6px}
+.metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.metric{background:#0b131a;border:1px solid #22303b;border-radius:12px;padding:12px;min-width:0}
+.metric span{display:block;color:var(--muted);font-size:.72rem}
+.metric strong{display:block;margin:5px 0 3px;font-size:1.05rem;overflow-wrap:anywhere}
+.metric small{color:#738291;font-size:.68rem;line-height:1.35;display:block}
+.sound-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:12px}
+.sound{background:#16232e;border:1px solid var(--line);color:var(--text);font-weight:700;font-size:.8rem;padding:12px 10px}
+.sound:hover{border-color:var(--accent)}
+.sound.danger{background:#3a1820;border-color:#6e2734;color:#ffb3bb}
+.muted,.note{color:var(--muted);font-size:.78rem;line-height:1.55}
+.note{margin:10px 0 0}
+.log{list-style:none;margin:0;padding:0;max-height:210px;overflow:auto}
+.log li{border-bottom:1px solid #22303b;padding:8px 0;font-size:.78rem;color:var(--muted)}
+.log li:first-child{padding-top:0}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px}
+table{width:100%;border-collapse:collapse;min-width:620px}
+th,td{text-align:left;padding:11px 12px;border-bottom:1px solid #22303b;font-size:.82rem;vertical-align:top}
+th{background:#0f171e;color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.6px}
+tr:last-child td{border-bottom:0}
+td b{color:var(--text)}
+.grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.checklist,.steps{margin:0;padding-left:20px;color:var(--muted);line-height:1.7;font-size:.86rem}
+.steps li{margin-bottom:8px}
+.formula{background:#0a1118;border:1px dashed #33505c;border-radius:12px;padding:14px;color:#bdeee0;font-family:ui-monospace,Consolas,monospace;font-size:.78rem;line-height:1.7;overflow-wrap:anywhere;white-space:pre-wrap}
+.warning{border-left:3px solid var(--yellow);background:#241f10;color:#e8d9a8;padding:12px 14px;border-radius:10px;font-size:.82rem;line-height:1.6;margin-top:12px}
+.footer{text-align:center;color:#6f7d8c;font-size:.74rem;padding:20px 0 10px;border-top:1px solid var(--line);margin-top:20px}
+@media(max-width:860px){.monitor-grid,.grid-3{grid-template-columns:1fr}}
+@media(max-width:760px){.sound-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.metrics{grid-template-columns:1fr}.level-row{flex-direction:column;align-items:flex-start}.percent{min-width:0}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="logo">S</span><div><strong>SmartClean</strong><small>Contenedor inteligente con ESP32</small></div></div>
+  <div class="pill"><span class="dot" id="dot"></span><span id="connectionState">Buscando ESP32...</span></div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="eyebrow">MONITOREO LOCAL EN TIEMPO REAL</div>
+    <h1>SmartClean</h1>
+    <p>Panel del prototipo para consultar el nivel interno del tacho, la tapa automática, el sensor de gas y el contador de aperturas. La información se obtiene directamente del ESP32 por la red Wi-Fi local.</p>
+    <div class="hero-tags"><span>ESP32 DevKit</span><span>Servo MG996R</span><span>MQ-4</span><span>2 x HC-SR04</span><span>LCD 16x2 I2C</span><span>Buzzer activo</span></div>
+  </section>
+
+  <nav class="nav" aria-label="Secciones de la página">
+    <a href="#monitoreo">Monitoreo</a>
+    <a href="#proyecto">Proyecto</a>
+    <a href="#materiales">Materiales</a>
+    <a href="#conexiones">Conexiones</a>
+    <a href="#montaje">Montaje</a>
+    <a href="#funcionamiento">Funcionamiento</a>
+  </nav>
+
+  <section class="section" id="monitoreo">
+    <div class="section-head"><div><div class="eyebrow">PANEL PRINCIPAL</div><h2>Monitoreo en vivo</h2></div><span class="tag" id="liveTag">SIN DATOS</span></div>
+
+    <article class="panel connection">
+      <div class="row">
+        <div><h3>Conexión con el ESP32</h3><p class="muted" style="margin:0">La página se conecta sola al abrirse. Si el nombre local no responde, escribe la IP que muestra la LCD.</p></div>
+        <span class="tag" id="connTag">DESCONECTADO</span>
+      </div>
+      <label for="endpoint">Dirección de datos</label>
+      <input id="endpoint" value="http://smartclean.local/datos" spellcheck="false" autocomplete="off">
+      <div class="actions"><button id="connect">Conectar</button><button class="secondary" id="retry">Reintentar</button></div>
+      <p class="note" id="updated">Última actualización: --</p>
+    </article>
+
+    <div class="monitor-grid">
+      <article class="panel radar-panel">
+        <div class="row"><div><div class="eyebrow">RADAR INTERNO</div><h3>Ocupación del tacho</h3></div><span class="tag" id="radarTag">--%</span></div>
+        <div class="radar-wrap"><canvas id="radar" width="430" height="430" aria-label="Radar circular que representa la basura interna del contenedor"></canvas></div>
+        <div class="radar-legend"><span><i class="dot-green"></i> Vacío</span><span><i class="dot-yellow"></i> Medio</span><span><i class="dot-red"></i> Lleno</span></div>
+        <p class="muted" id="radarText" style="text-align:center">Esperando la lectura del sensor de nivel.</p>
+      </article>
+
+      <article class="panel">
+        <div class="row"><div><div class="eyebrow">TELEMETRÍA</div><h3>Datos del contenedor</h3></div><span class="tag" id="stateTag">--</span></div>
+        <div class="level-row">
+          <div class="percent"><span id="percent">--</span><small>%</small></div>
+          <div class="level-info"><div class="bar"><div class="barin" id="bar"></div></div><div class="scale"><span>Vacío</span><span>Lleno</span></div></div>
+        </div>
+        <div class="metrics">
+          <div class="metric"><span>Distancia al fondo</span><strong id="distancia">-- cm</strong><small>Profundidad útil: 30 cm</small></div>
+          <div class="metric"><span>Tapa</span><strong id="tapa">--</strong><small>Servo MG996R en GPIO 4</small></div>
+          <div class="metric"><span>Sensor de mano</span><strong id="mano">-- cm</strong><small>Abre la tapa a 15 cm</small></div>
+          <div class="metric"><span>Aperturas</span><strong id="aperturas">--</strong><small>Contador guardado en el ESP32</small></div>
+          <div class="metric"><span>Gas MQ-4</span><strong id="gas">--</strong><small id="gasRaw">Salida digital: --</small></div>
+          <div class="metric"><span>Tiempo encendido</span><strong id="uptime">--</strong><small>Desde el último reinicio</small></div>
+          <div class="metric"><span>Wi-Fi</span><strong id="rssi">-- dBm</strong><small id="rssiTexto">Sin conexión</small></div>
+          <div class="metric"><span>ESP32</span><strong id="ip">--</strong><small id="ssid">Red: --</small></div>
+        </div>
+      </article>
+    </div>
+
+    <article class="panel">
+      <div class="row"><div><div class="eyebrow">CONTROL MANUAL</div><h3>Sonidos del buzzer</h3></div><span class="tag" id="soundTag">LISTO</span></div>
+      <p class="muted" style="margin:0 0 4px">Si el buzzer apenas suena, prueba primero los modos activo y pasivo. El modo que suene más fuerte queda guardado en el ESP32. La alarma automática por gas o tacho lleno se silencia hasta que la causa desaparezca.</p>
+      <div class="sound-grid">
+        <button class="sound" data-sonido="prueba" data-modo="activo">Probar modo activo</button>
+        <button class="sound" data-sonido="prueba" data-modo="pasivo">Probar modo pasivo</button>
+        <button class="sound" data-sonido="prueba">Pitido de prueba</button>
+        <button class="sound" data-sonido="doble">Doble pitido</button>
+        <button class="sound" data-sonido="intermitente">Alarma intermitente</button>
+        <button class="sound" data-sonido="continuo">Alarma continua</button>
+        <button class="sound" data-sonido="cucaracha">Ritmo La Cucaracha</button>
+        <button class="sound" data-sonido="retro">Patrón retro</button>
+        <button class="sound" data-sonido="funk">Ritmo funk 80s</button>
+        <button class="sound danger" data-sonido="silencio">Silenciar alarma</button>
+      </div>
+      <p class="note" id="soundStatus">Sin comandos enviados.</p>
+    </article>
+
+    <article class="panel" style="margin-top:14px">
+      <div class="row"><h3>Registro de eventos</h3><button class="secondary" id="clearLog" style="padding:7px 11px;font-size:.75rem">Limpiar</button></div>
+      <ul class="log" id="eventLog"><li>SmartClean iniciado. Buscando el ESP32...</li></ul>
+    </article>
+  </section>
+
+  <section class="section" id="proyecto">
+    <div class="section-head"><div><div class="eyebrow">PRESENTACIÓN</div><h2>El proyecto SmartClean</h2></div></div>
+    <div class="grid-3">
+      <article class="panel"><h3>Problema</h3><p class="muted">Un tacho común no informa cuánto espacio le queda ni avisa cuando está lleno. Las revisiones pueden llegar tarde, provocar desbordes o dejar pasar olores y gas.</p></article>
+      <article class="panel"><h3>Objetivo</h3><p class="muted">Construir un contenedor que mida su nivel, abra la tapa al acercar la mano, detecte gas con un MQ-4, cuente las aperturas y muestre todo en una LCD y en este panel local.</p></article>
+      <article class="panel"><h3>Alcance real</h3><p class="muted">Este prototipo no incluye GPS, panel solar, iluminación automática ni estación meteorológica. El panel muestra únicamente los datos que el firmware del ESP32 entrega.</p></article>
+    </div>
+    <article class="panel" style="margin-top:14px">
+      <h3>Qué hace el prototipo</h3>
+      <ul class="checklist">
+        <li>Mide la distancia al fondo del tacho con un HC-SR04 y calcula el porcentaje de ocupación.</li>
+        <li>Detecta la mano con un segundo HC-SR04 y mueve la tapa con un servo MG996R.</li>
+        <li>Lee la salida digital del MQ-4 y activa una alarma si detecta gas.</li>
+        <li>Cuenta cada apertura y guarda el total en la memoria del ESP32.</li>
+        <li>Muestra nivel, distancia, aperturas y gas en una LCD 16x2 I2C.</li>
+        <li>Publica los datos en <code>/datos</code> y acepta comandos de sonido en <code>/sonido</code>.</li>
+      </ul>
+    </article>
+  </section>
+
+  <section class="section" id="materiales">
+    <div class="section-head"><div><div class="eyebrow">COMPONENTES</div><h2>Materiales utilizados</h2></div></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Material</th><th>Cantidad</th><th>Uso en el proyecto</th></tr></thead>
+        <tbody>
+          <tr><td><b>Fuente de 110 V AC a 5 V DC, 5 A</b></td><td>1</td><td>Alimenta el ESP32, el servo, la LCD y los sensores.</td></tr>
+          <tr><td><b>Conector de alimentación tipo PC</b></td><td>1</td><td>Conexión de entrada de la fuente.</td></tr>
+          <tr><td><b>ESP32 DevKit</b></td><td>1</td><td>Controlador del prototipo y servidor web local.</td></tr>
+          <tr><td><b>Servo MG996R</b></td><td>1</td><td>Abre y cierra la tapa del tacho.</td></tr>
+          <tr><td><b>Pantalla LCD 16x2 con módulo I2C</b></td><td>1</td><td>Muestra el estado local: nivel, aperturas y gas.</td></tr>
+          <tr><td><b>Módulo MQ-4</b></td><td>1</td><td>Detección digital de gas.</td></tr>
+          <tr><td><b>Sensor ultrasónico HC-SR04</b></td><td>2</td><td>Uno mide el nivel interno y otro detecta la mano.</td></tr>
+          <tr><td><b>Buzzer activo de 3 pines</b></td><td>1</td><td>Alarmas y patrones de sonido.</td></tr>
+          <tr><td><b>Protoboard</b></td><td>1</td><td>Distribución de conexiones y divisores.</td></tr>
+          <tr><td><b>Cables Dupont</b></td><td>1 juego</td><td>Señales, alimentación y conexiones a la protoboard.</td></tr>
+          <tr><td><b>Tacho de basura</b></td><td>1</td><td>Estructura del contenedor.</td></tr>
+          <tr><td><b>Silicón y barras de silicón</b></td><td>1</td><td>Fijación de sensores, servo y componentes.</td></tr>
+          <tr><td><b>Resistencias de 1 kΩ</b></td><td>3</td><td>Primera resistencia de los divisores de voltaje.</td></tr>
+          <tr><td><b>Resistencias de 2 kΩ</b></td><td>3</td><td>Segunda resistencia de los divisores de voltaje.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Los divisores de voltaje son necesarios porque los HC-SR04 y el MQ-4 se alimentan a 5 V, mientras las entradas del ESP32 trabajan a 3.3 V.</p>
+  </section>
+
+  <section class="section" id="conexiones">
+    <div class="section-head"><div><div class="eyebrow">CABLEADO</div><h2>Conexiones del ESP32</h2></div></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Señal</th><th>GPIO del ESP32</th><th>Observaciones</th></tr></thead>
+        <tbody>
+          <tr><td><b>Servo MG996R (PWM)</b></td><td>4</td><td>VCC a 5 V y GND común. No alimentar desde 3.3 V.</td></tr>
+          <tr><td><b>Buzzer activo (SIG)</b></td><td>14</td><td>Módulo de 3 pines: VCC a 5 V, GND y señal.</td></tr>
+          <tr><td><b>MQ-4 DO</b></td><td>13</td><td>Usar divisor de 5 V a 3.3 V antes del GPIO.</td></tr>
+          <tr><td><b>HC-SR04 de nivel, TRIG</b></td><td>25</td><td>VCC a 5 V y GND común.</td></tr>
+          <tr><td><b>HC-SR04 de nivel, ECHO</b></td><td>26</td><td>Usar divisor de 5 V a 3.3 V antes del GPIO.</td></tr>
+          <tr><td><b>HC-SR04 de mano, TRIG</b></td><td>27</td><td>VCC a 5 V y GND común.</td></tr>
+          <tr><td><b>HC-SR04 de mano, ECHO</b></td><td>18</td><td>Usar divisor de 5 V a 3.3 V antes del GPIO.</td></tr>
+          <tr><td><b>LCD SDA</b></td><td>23</td><td>I2C, dirección 0x27.</td></tr>
+          <tr><td><b>LCD SCL</b></td><td>19</td><td>I2C, dirección 0x27.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <article class="panel" style="margin-top:14px">
+      <h3>Divisor de voltaje para las señales de 5 V</h3>
+      <p class="muted">Se repite en las tres entradas de 5 V: ECHO del sensor de nivel, ECHO del sensor de mano y DO del MQ-4.</p>
+      <div class="formula">Señal 5 V ---- R1 1 kΩ ----+---- GPIO ESP32 (3.3 V)
+                          |
+                        R2 2 kΩ
+                          |
+                         GND
+
+VGPIO = 5 V x 2 kΩ / (1 kΩ + 2 kΩ) = 3.33 V</div>
+      <div class="warning">El MG996R debe alimentarse desde la fuente de 5 V/5 A y compartir GND con el ESP32. No lo conectes al pin de 3.3 V. Si el servo provoca reinicios, agrega un capacitor de 470 a 1000 µF cerca de su alimentación.</div>
+    </article>
+  </section>
+
+  <section class="section" id="montaje">
+    <div class="section-head"><div><div class="eyebrow">CONSTRUCCIÓN</div><h2>Montaje del contenedor</h2></div></div>
+    <article class="panel">
+      <ol class="steps">
+        <li>Fija la fuente de 5 V/5 A y el conector de alimentación en una zona segura del tacho.</li>
+        <li>Monta el servo MG996R en la tapa. La posición cerrada es 0° y la abierta es 90°.</li>
+        <li>Coloca el HC-SR04 de nivel en la tapa, apuntando hacia el fondo del tacho.</li>
+        <li>Coloca el HC-SR04 de mano en la parte frontal, apuntando hacia donde se acerca la persona.</li>
+        <li>Ubica el MQ-4 cerca de la abertura, sin tapar su rejilla de ventilación.</li>
+        <li>Fija la LCD y el buzzer en una zona visible y accesible.</li>
+        <li>Arma los tres divisores de voltaje en la protoboard y une todos los GND.</li>
+        <li>Carga el firmware, enciende el ESP32 y verifica la IP en la LCD.</li>
+        <li>Conecta la página con esa IP o con <code>http://smartclean.local/datos</code>.</li>
+      </ol>
+    </article>
+  </section>
+
+  <section class="section" id="funcionamiento">
+    <div class="section-head"><div><div class="eyebrow">LÓGICA DEL FIRMWARE</div><h2>Cómo funciona</h2></div></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Función</th><th>Comportamiento</th><th>Valor o detalle</th></tr></thead>
+        <tbody>
+          <tr><td><b>Apertura de tapa</b></td><td>El sensor frontal detecta una mano y el servo abre la tapa.</td><td>Se activa a 15 cm o menos.</td></tr>
+          <tr><td><b>Cierre de tapa</b></td><td>Si no hay presencia, la tapa vuelve a cerrarse.</td><td>Después de 3 segundos sin mano.</td></tr>
+          <tr><td><b>Nivel del tacho</b></td><td>El sensor de la tapa mide la distancia al fondo y calcula el porcentaje.</td><td>30 cm equivale a vacío; 2 cm equivale a lleno.</td></tr>
+          <tr><td><b>Objeto muy cerca</b></td><td>Si el sensor no recibe eco por estar pegado al fondo, el firmware lo interpreta como lleno.</td><td>Tras 3 lecturas sin eco se muestra 100%.</td></tr>
+          <tr><td><b>Gas</b></td><td>El MQ-4 entrega una salida digital; el firmware confirma la alerta con varias lecturas.</td><td>Ignora los primeros 10 segundos de calentamiento.</td></tr>
+          <tr><td><b>Contador</b></td><td>Cada apertura suma uno y el total se guarda en la memoria interna.</td><td>Se conserva aunque se reinicie el ESP32.</td></tr>
+          <tr><td><b>Alarma</b></td><td>Suena si el tacho está lleno o si hay gas.</td><td>Silenciar dura hasta que la causa desaparezca.</td></tr>
+          <tr><td><b>Red</b></td><td>El ESP32 se conecta como cliente a la Wi-Fi configurada.</td><td>Red: SSD BASURA/WIFI; nombre local: smartclean.local.</td></tr>
+          <tr><td><b>Datos</b></td><td>La página consulta el estado cada segundo.</td><td><code>GET /datos</code></td></tr>
+          <tr><td><b>Sonidos</b></td><td>La página envía el patrón elegido al ESP32.</td><td><code>GET /sonido?p=prueba</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <article class="panel" style="margin-top:14px">
+      <h3>Comandos de sonido disponibles</h3>
+      <p class="muted">El buzzer activo mantiene un tono fijo. Los patrones cambian la duración y el ritmo, no la nota. Comandos aceptados por el ESP32: <code>prueba</code>, <code>doble</code>, <code>intermitente</code>, <code>continuo</code>, <code>cucaracha</code>, <code>retro</code>, <code>funk</code> y <code>silencio</code>.</p>
+    </article>
+  </section>
+
+  <footer class="footer">SmartClean · prototipo con ESP32 · panel local de monitoreo</footer>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+let timer=null,radarTarget=0,radarPercent=0,radarAngle=0;
+const last={lid:false,gas:false,full:false};
+let conectado=false;
+
+function normalizarUrl(v){v=(v||'').trim();if(!v)return'';if(!/^https?:\/\//i.test(v))v='http://'+v;if(!/\/(datos|estado)\/?$/i.test(v))v=v.replace(/\/+$/,'')+'/datos';return v}
+function baseActual(){return normalizarUrl($('endpoint').value).replace(/\/(datos|estado)\/?$/i,'')}
+function formatUptime(s){s=Number(s)||0;const d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60);return (d?d+'d ':'')+(h?h+'h ':'')+m+'m'}
+function log(msg){const li=document.createElement('li');li.textContent=new Date().toLocaleTimeString()+' · '+msg;const list=$('eventLog');list.prepend(li);while(list.children.length>30)list.lastChild.remove()}
+
+function setConn(ok,msg){
+  $('connectionState').textContent=msg;
+  const dot=$('dot');dot.className='dot '+(ok?'ok':ok===false?'bad':'');
+  $('connTag').textContent=ok?'CONECTADO':ok===false?'DESCONECTADO':'CONECTANDO';
+  $('connTag').className='tag '+(ok?'':ok===false?'bad':'warn');
+  $('liveTag').textContent=ok?'EN VIVO':ok===false?'SIN DATOS':'CONECTANDO';
+  $('liveTag').className='tag '+(ok?'':ok===false?'bad':'warn');
+}
+
+function update(d){
+  const p=Number(d.porcentaje);
+  if(Number.isFinite(p)){
+    radarTarget=p;
+    $('percent').textContent=Math.round(p);
+    $('bar').style.width=p+'%';
+    $('radarTag').textContent=Math.round(p)+'%';
+    const estado=d.lleno?'LLENO':d.gas?'ALERTA GAS':d.valida===false?'SIN LECTURA':'OPERATIVO';
+    $('stateTag').textContent=estado;
+    $('stateTag').className='tag '+(d.lleno||d.gas?'bad':p>70?'warn':'');
+    $('radarText').textContent=d.lleno?'El radar marca el contenedor lleno.':'Ocupación estimada: '+Math.round(p)+'%.';
+  }
+  $('distancia').textContent=(d.distancia===null||d.distancia===undefined)?'Sin eco':Number(d.distancia).toFixed(1)+' cm';
+  $('tapa').textContent=d.tapaAbierta?'Abierta':'Cerrada';
+  $('tapa').style.color=d.tapaAbierta?'var(--mint)':'var(--text)';
+  $('mano').textContent=(d.distanciaMano===null||d.distanciaMano===undefined)?'Sin eco':Number(d.distanciaMano).toFixed(1)+' cm';
+  $('aperturas').textContent=d.aperturas??'--';
+  $('gas').textContent=d.gas?'ALERTA':'Normal';
+  $('gas').style.color=d.gas?'var(--accent)':'var(--mint)';
+  $('gasRaw').textContent='Salida digital: '+(d.gasRaw===0?'LOW (0)':d.gasRaw===1?'HIGH (1)':(d.gasRaw??'--'));
+  $('uptime').textContent=formatUptime(d.uptime);
+  $('rssi').textContent=d.rssi?d.rssi+' dBm':'-- dBm';
+  $('rssiTexto').textContent=!d.rssi?'Sin conexión':d.rssi>-60?'Excelente':d.rssi>-70?'Buena':d.rssi>-80?'Regular':'Débil';
+  $('ip').textContent=d.ip||'--';
+  $('ssid').textContent='Red: '+(d.ssid||'--');
+  $('updated').textContent='Última actualización: '+new Date().toLocaleTimeString();
+  $('soundTag').textContent=d.silencio?'SILENCIADO':d.alerta?'ALARMA':'LISTO';
+  $('soundTag').className='tag '+(d.silencio?'warn':d.alerta?'bad':'');
+
+  if(d.tapaAbierta!==undefined){const was=last.lid;last.lid=!!d.tapaAbierta;if(last.lid&&!was)log('Tapa abierta. Apertura #'+(d.aperturas??'?'));}
+  if(d.gas!==undefined){const was=last.gas;last.gas=!!d.gas;if(last.gas&&!was)log('ALERTA: el MQ-4 detectó gas.');}
+  if(d.lleno!==undefined){const was=last.full;last.full=!!d.lleno;if(last.full&&!was)log('El contenedor alcanzó el nivel de llenado.');}
+}
+
+async function poll(){
+  const url=normalizarUrl($('endpoint').value);
+  if(!url)return;
+  try{
+    const r=await fetch(url,{cache:'no-store'});
+    if(!r.ok)throw Error('HTTP '+r.status);
+    const d=await r.json();
+    update(d);
+    setConn(true,'ESP32 conectado');
+    if(!conectado){conectado=true;log('ESP32 conectado en '+url)}
+  }catch(e){
+    setConn(false,'Sin conexión');
+    if(conectado){conectado=false;log('Se perdió la conexión con el ESP32')}
+  }
+}
+
+function startPolling(){
+  if(timer)clearInterval(timer);
+  poll();
+  timer=setInterval(poll,1000);
+}
+
+async function enviarSonido(p,modo){
+  const base=baseActual();
+  if(!base){$('soundStatus').textContent='Primero escribe la dirección del ESP32.';return}
+  let url=base+'/sonido?p='+encodeURIComponent(p);
+  if(modo)url+='&modo='+encodeURIComponent(modo);
+  $('soundStatus').textContent='Enviando comando: '+p+(modo?' ('+modo+')':'')+'...';
+  try{
+    const r=await fetch(url,{cache:'no-store'});
+    const d=await r.json();
+    if(!r.ok||!d.ok)throw Error(d.error||('HTTP '+r.status));
+    $('soundStatus').textContent='Comando aceptado: '+p+(d.modo?' · modo '+d.modo:'')+(d.silencio?' · alarma silenciada':'');
+    log('Sonido enviado: '+p+(modo?' · modo '+modo:''));
+  }catch(e){
+    $('soundStatus').textContent='No se pudo enviar el sonido: '+e.message;
+  }
+}
+
+function drawRadar(){
+  const canvas=$('radar');
+  if(!canvas){requestAnimationFrame(drawRadar);return}
+  const rect=canvas.getBoundingClientRect();
+  const size=Math.min(rect.width,rect.height);
+  if(size<20){requestAnimationFrame(drawRadar);return}
+  const dpr=window.devicePixelRatio||1;
+  const px=Math.round(size*dpr);
+  if(canvas.width!==px){canvas.width=px;canvas.height=px}
+  const ctx=canvas.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  const cx=size/2,cy=size/2,R=size/2-8;
+  ctx.clearRect(0,0,size,size);
+
+  ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);ctx.fillStyle='#071016';ctx.fill();
+  ctx.strokeStyle='#1f3b45';ctx.lineWidth=2;ctx.stroke();
+
+  for(let i=1;i<=4;i++){
+    ctx.beginPath();ctx.arc(cx,cy,R*i/4,0,Math.PI*2);
+    ctx.strokeStyle=i===4?'rgba(66,230,177,.28)':'rgba(66,230,177,.12)';
+    ctx.lineWidth=1;ctx.stroke();
+  }
+  ctx.strokeStyle='rgba(66,230,177,.12)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(cx-R,cy);ctx.lineTo(cx+R,cy);ctx.moveTo(cx,cy-R);ctx.lineTo(cx,cy+R);ctx.stroke();
+
+  radarPercent+=(radarTarget-radarPercent)*0.07;
+  const p=Math.max(0,Math.min(100,radarPercent));
+  const fr=R*(p/100);
+  const color=p>=90?'#ff4d5e':p>=70?'#ffc857':'#42e6b1';
+  if(fr>1){
+    const grad=ctx.createRadialGradient(cx,cy,0,cx,cy,fr);
+    grad.addColorStop(0,color+'cc');
+    grad.addColorStop(1,color+'22');
+    ctx.beginPath();ctx.arc(cx,cy,fr,0,Math.PI*2);ctx.fillStyle=grad;ctx.fill();
+    ctx.beginPath();ctx.arc(cx,cy,fr,0,Math.PI*2);
+    ctx.strokeStyle=color;ctx.lineWidth=2;ctx.shadowColor=color;ctx.shadowBlur=14;ctx.stroke();ctx.shadowBlur=0;
+  }
+
+  ctx.save();ctx.translate(cx,cy);ctx.rotate(radarAngle);
+  const sweep=ctx.createLinearGradient(0,0,R,0);
+  sweep.addColorStop(0,'rgba(66,230,177,0)');
+  sweep.addColorStop(1,'rgba(66,230,177,.38)');
+  ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,R,-0.45,0);ctx.closePath();ctx.fillStyle=sweep;ctx.fill();
+  ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(R,0);ctx.strokeStyle='rgba(66,230,177,.9)';ctx.lineWidth=1.5;ctx.stroke();
+  ctx.restore();
+
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillStyle='#f2f5f7';ctx.font='800 '+Math.round(R*0.26)+'px Inter, system-ui, sans-serif';
+  ctx.fillText(Math.round(p)+'%',cx,cy-4);
+  ctx.fillStyle='#9aa7b5';ctx.font='700 '+Math.round(R*0.075)+'px Inter, system-ui, sans-serif';
+  ctx.fillText('OCUPACIÓN',cx,cy+R*0.17);
+
+  radarAngle=(radarAngle+0.025)%(Math.PI*2);
+  requestAnimationFrame(drawRadar);
+}
+
+document.querySelectorAll('[data-sonido]').forEach(b=>b.addEventListener('click',()=>enviarSonido(b.dataset.sonido,b.dataset.modo)));
+$('connect').onclick=()=>{
+  const url=normalizarUrl($('endpoint').value);
+  if(!url){alert('Escribe la dirección del ESP32.');return}
+  $('endpoint').value=url;
+  localStorage.setItem('smartclean_endpoint',url);
+  startPolling();
+};
+$('retry').onclick=()=>{
+  const url=normalizarUrl($('endpoint').value);
+  if(url)$('endpoint').value=url;
+  startPolling();
+};
+$('clearLog').onclick=()=>{$('eventLog').innerHTML='<li>Registro limpiado.</li>'};
+
+const guardada=localStorage.getItem('smartclean_endpoint');
+if(guardada)$('endpoint').value=guardada;
+startPolling();
+drawRadar();
+</script>
+</body>
+</html>
